@@ -73,7 +73,6 @@ INSTALLED_APPS = [
     'quizzes',
     'session',
     'studymaterials',
-    'test_scores',
     'accounts',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -121,18 +120,26 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Use PostgreSQL in production
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
+if DEBUG:
+    # Development: Use SQLite for simplicity and ease of setup.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-
+else:
+    # Production: Use PostgreSQL and read credentials from environment variables.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+        }
+    }
 
 
 # Password validation
@@ -190,15 +197,24 @@ if CORS_ALLOWED_ORIGINS_ENV:
 
 # backend/settings.py
 
-# Use Redis for caching in production for rate-limiting across multiple processes
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+if DEBUG:
+    # Development: Use in-memory cache, which is simple and requires no setup.
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'edutrack-local-cache',
         }
     }
-}
+else:
+    # Production: Use Redis for a robust, multi-process cache for rate-limiting.
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            }
+        }
+    }
 
 AUTH_USER_MODEL = 'accounts.User'

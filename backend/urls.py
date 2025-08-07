@@ -22,7 +22,6 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/accounts/', include('accounts.urls')),  # Accounts app API
-    path('api/test-scores/', include('test_scores.urls')),  # testscores app API
     path('api/studymaterials/', include('studymaterials.urls')), # studymaterials app API
     path('api/onlinequiz/', include('quizzes.urls')),  # Include the quiz app URLs
     path('api/session/', include('session.urls')),  # session app API
