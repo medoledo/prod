@@ -186,6 +186,11 @@ CORS_ALLOWED_ORIGINS = [
     'https://197cwk1k-3000.use.devtunnels.ms',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://edutrackeg.com',
+    'https://www.edutrackeg.com'
+]
+
 
 # backend/settings.py
 
