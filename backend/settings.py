@@ -32,7 +32,6 @@ DEBUG = False
 ALLOWED_HOSTS = [
     'edutrackeg.com',
     'www.edutrackeg.com',
-    'http://127.0.0.1:8000/'
 ]
 
 
