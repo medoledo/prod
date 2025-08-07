@@ -41,14 +41,12 @@ ALLOWED_HOSTS = [
 # settings.py
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',  # Add this
-        'accounts.authentication.CustomJWTAuthentication',
+        'accounts.authentication.CustomJWTAuthentication',  # Replaces JWTAuthentication
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
-
 
 
 SIMPLE_JWT = {
