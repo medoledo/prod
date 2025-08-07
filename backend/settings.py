@@ -32,6 +32,8 @@ DEBUG = False
 ALLOWED_HOSTS = [
     'edutrackeg.com',
     'www.edutrackeg.com',
+    'localhost',  # Add this for local testing
+    '127.0.0.1',  # Add this for local testing
 ]
 
 
