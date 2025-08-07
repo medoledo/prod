@@ -1,9 +1,12 @@
-edutrack/
 __pycache__/
 db.sqlite3
 *.pyc
 *.pyo
 *.pyd
 *.log
-staticfiles/
-media/
+
+# Environment files
+.env*
+
+# Keys - never commit private keys
+private.pem
