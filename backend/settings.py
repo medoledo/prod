@@ -68,7 +68,6 @@ INSTALLED_APPS = [
     'quizzes',
     'session',
     'studymaterials',
-    'test_scores',
     'accounts',
     'rest_framework',
     'rest_framework_simplejwt',
