@@ -1,2 +1,9 @@
-private.pem
-.env
+edutrack/
+__pycache__/
+db.sqlite3
+*.pyc
+*.pyo
+*.pyd
+*.log
+staticfiles/
+media/

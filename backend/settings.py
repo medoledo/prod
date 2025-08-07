@@ -14,28 +14,25 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-import os
-from dotenv import load_dotenv
+import os  # Add this import at the top
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file in the base directory
-load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'django-insecure-07w77ix3wfndyf9cux*cmtw+*o7e&3hzr@gymcms)xg%@__l57'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+DEBUG = False
 
-ALLOWED_HOSTS = []
-ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
-if ALLOWED_HOSTS_ENV:
-    ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
+ALLOWED_HOSTS = [
+    'edutrackeg.com',
+    'www.edutrackeg.com',
+]
 
 
 
@@ -58,10 +55,8 @@ SIMPLE_JWT = {
     'UPDATE_LAST_LOGIN': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'ALGORITHM': 'RS256',
-    # IMPORTANT: Place your private.pem and public.pem in the BASE_DIR (the 'backend' folder)
-    # Do NOT commit your private.pem key to a public repository.
-    'SIGNING_KEY': open(os.path.join(BASE_DIR, 'private.pem')).read(),
-    'VERIFYING_KEY': open(os.path.join(BASE_DIR, 'public.pem')).read(),
+    'SIGNING_KEY': open(os.path.join(BASE_DIR, 'backend/private.pem')).read(),
+    'VERIFYING_KEY': open(os.path.join(BASE_DIR, 'backend/public.pem')).read(),
 }
 
 
@@ -73,6 +68,7 @@ INSTALLED_APPS = [
     'quizzes',
     'session',
     'studymaterials',
+    'test_scores',
     'accounts',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -120,26 +116,17 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if DEBUG:
-    # Development: Use SQLite for simplicity and ease of setup.
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'edutrackdb',          # The name you created earlier
+        'USER': 'edutrackuser',        # The username you created
+        'PASSWORD': '0543509195Te@#',  # Your actual PostgreSQL password
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
-else:
-    # Production: Use PostgreSQL and read credentials from environment variables.
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME'),
-            'USER': os.environ.get('DB_USER'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
-            'PASSWORD': os.environ.get('DB_PASSWORD'),
-        }
-    }
+}
+
 
 
 # Password validation
@@ -180,6 +167,10 @@ STATIC_URL = 'static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
 
 MEDIA_URL = '/media/'  # URL to serve media files
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Local file system path
@@ -189,32 +180,32 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Local file system path
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = []
-CORS_ALLOWED_ORIGINS_ENV = os.environ.get('CORS_ALLOWED_ORIGINS')
-if CORS_ALLOWED_ORIGINS_ENV:
-    CORS_ALLOWED_ORIGINS.extend(CORS_ALLOWED_ORIGINS_ENV.split(','))
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://192.168.1.2:3000',
+    'https://edusite-jet.vercel.app',
+    'http://172.17.32.1:3000',
+    'https://197cwk1k-3000.use.devtunnels.ms',
+]
 
 
 # backend/settings.py
 
-if DEBUG:
-    # Development: Use in-memory cache, which is simple and requires no setup.
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'edutrack-local-cache',
-        }
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'ratelimit-cache',
     }
-else:
-    # Production: Use Redis for a robust, multi-process cache for rate-limiting.
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            }
-        }
-    }
+}
+
+
 
 AUTH_USER_MODEL = 'accounts.User'
+
+# Secure HTTPS settings for production
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
