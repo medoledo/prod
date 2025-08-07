@@ -55,8 +55,8 @@ SIMPLE_JWT = {
     'UPDATE_LAST_LOGIN': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'ALGORITHM': 'RS256',
-    'SIGNING_KEY': open(os.path.join(BASE_DIR, 'backend/private.pem')).read(),
-    'VERIFYING_KEY': open(os.path.join(BASE_DIR, 'backend/public.pem')).read(),
+    'SIGNING_KEY': open(os.path.join(BASE_DIR, 'private.pem')).read(),
+    'VERIFYING_KEY': open(os.path.join(BASE_DIR, 'public.pem')).read(),
 }
 
 
