@@ -206,10 +206,10 @@ CORS_ALLOWED_ORIGINS_ENV = os.environ.get('CORS_ALLOWED_ORIGINS')
 if CORS_ALLOWED_ORIGINS_ENV:
     CORS_ALLOWED_ORIGINS.extend(CORS_ALLOWED_ORIGINS_ENV.split(','))
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://edutrackeg.com',
-    'https://www.edutrackeg.com'
-]
+CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS_ENV = os.environ.get('CSRF_TRUSTED_ORIGINS')
+if CSRF_TRUSTED_ORIGINS_ENV:
+    CSRF_TRUSTED_ORIGINS.extend(CSRF_TRUSTED_ORIGINS_ENV.split(','))
 
 # backend/settings.py
 
