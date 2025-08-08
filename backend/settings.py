@@ -14,29 +14,32 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-import os  # Add this import at the top
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env file in the base directory
+# Make sure you have a .env file in the 'backend' folder
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-07w77ix3wfndyf9cux*cmtw+*o7e&3hzr@gymcms)xg%@__l57'
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured("The SECRET_KEY setting must be set in the .env file.")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = [
-    'edutrackeg.com',
-    'www.edutrackeg.com',
-    'localhost',  # Add this for local testing
-    '127.0.0.1',  # Add this for local testing
-]
-
-
+ALLOWED_HOSTS = []
+ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS')
+if ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS.extend(ALLOWED_HOSTS_ENV.split(','))
 
 # settings.py
 REST_FRAMEWORK = {
@@ -48,19 +51,31 @@ REST_FRAMEWORK = {
     ],
 }
 
-
-SIMPLE_JWT = {
+SIMPLE_JWT = { # Base settings for JWT
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'ALGORITHM': 'RS256',
-    'SIGNING_KEY': open(os.path.join(BASE_DIR, 'private.pem')).read(),
-    'VERIFYING_KEY': open(os.path.join(BASE_DIR, 'public.pem')).read(),
 }
 
+if DEBUG:
+    # For local development, use the simpler HS256 algorithm with the SECRET_KEY.
+    # This avoids needing to manage .pem files locally.
+    SIMPLE_JWT['ALGORITHM'] = 'HS256'
+    SIMPLE_JWT['SIGNING_KEY'] = SECRET_KEY
+else:
+    # For production, enforce the more secure RS256 algorithm with key files.
+    SIMPLE_JWT['ALGORITHM'] = 'RS256'
+    try:
+        SIMPLE_JWT['SIGNING_KEY'] = open(os.path.join(BASE_DIR, 'private.pem')).read()
+        SIMPLE_JWT['VERIFYING_KEY'] = open(os.path.join(BASE_DIR, 'public.pem')).read()
+    except FileNotFoundError:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            "In production (DEBUG=False), 'private.pem' and 'public.pem' must exist in the base directory."
+        )
 
 # Application definition
 
@@ -117,18 +132,26 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'edutrackdb',          # The name you created earlier
-        'USER': 'edutrackuser',        # The username you created
-        'PASSWORD': '0543509195Te@#',  # Your actual PostgreSQL password
-        'HOST': 'localhost',
-        'PORT': '5432',
+if DEBUG:
+    # Development: Use SQLite for simplicity and ease of setup.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-
-
+else:
+    # Production: Use PostgreSQL and read credentials from environment variables.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -178,23 +201,36 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Local file system path
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://192.168.1.2:3000',
-    'https://edusite-jet.vercel.app',
-    'http://172.17.32.1:3000',
-    'https://197cwk1k-3000.use.devtunnels.ms',
-]
+CORS_ALLOWED_ORIGINS = []
+CORS_ALLOWED_ORIGINS_ENV = os.environ.get('CORS_ALLOWED_ORIGINS')
+if CORS_ALLOWED_ORIGINS_ENV:
+    CORS_ALLOWED_ORIGINS.extend(CORS_ALLOWED_ORIGINS_ENV.split(','))
 
+CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS_ENV = os.environ.get('CSRF_TRUSTED_ORIGINS')
+if CSRF_TRUSTED_ORIGINS_ENV:
+    CSRF_TRUSTED_ORIGINS.extend(CSRF_TRUSTED_ORIGINS_ENV.split(','))
 
 # backend/settings.py
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'ratelimit-cache',
+if DEBUG:
+    # Development: Use in-memory cache, which is simple and requires no setup.
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'edutrack-local-cache',
+        }
     }
-}
-
+else:
+    # Production: Use Redis for a robust, multi-process cache for rate-limiting.
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            }
+        }
+    }
 
 AUTH_USER_MODEL = 'accounts.User'
