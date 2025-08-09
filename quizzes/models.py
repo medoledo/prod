@@ -5,6 +5,8 @@ from django.utils import timezone
 from datetime import timedelta
 from django.core.validators import FileExtensionValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 from accounts.models import TeacherProfile, StudentProfile, Center, Grade
 
 class Quiz(models.Model):
@@ -301,3 +303,21 @@ class Answer(models.Model):
     
     def __str__(self):
         return f"{self.question.text[:50]}... (Score: {self.points_earned}/{self.question.points})"
+
+
+@receiver(pre_delete, sender=Question)
+def delete_question_image(sender, instance, **kwargs):
+    """
+    Deletes the image file from the filesystem when a Question object is deleted.
+    """
+    if instance.image:
+        instance.image.delete(save=False)
+
+
+@receiver(pre_delete, sender=Choice)
+def delete_choice_image(sender, instance, **kwargs):
+    """
+    Deletes the image file from the filesystem when a Choice object is deleted.
+    """
+    if instance.image:
+        instance.image.delete(save=False)
