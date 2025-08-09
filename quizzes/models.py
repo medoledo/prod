@@ -5,7 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.core.validators import FileExtensionValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
-from django.db.models.signals import pre_delete
+from django.db.models.signals import pre_delete, pre_save
 from django.dispatch import receiver
 from accounts.models import TeacherProfile, StudentProfile, Center, Grade
 
@@ -312,6 +312,44 @@ def delete_question_image(sender, instance, **kwargs):
     """
     if instance.image:
         instance.image.delete(save=False)
+
+
+@receiver(pre_save, sender=Question)
+def auto_delete_question_image_on_change(sender, instance, **kwargs):
+    """
+    Deletes the old image file from the filesystem when a Question object's
+    image is updated or cleared.
+    """
+    if not instance.pk:
+        return False
+
+    try:
+        old_instance = Question.objects.get(pk=instance.pk)
+    except Question.DoesNotExist:
+        return False
+
+    # Check if the image has changed (i.e., old image exists and is different from the new one)
+    if old_instance.image and old_instance.image != instance.image:
+        old_instance.image.delete(save=False)
+
+
+@receiver(pre_save, sender=Choice)
+def auto_delete_choice_image_on_change(sender, instance, **kwargs):
+    """
+    Deletes the old image file from the filesystem when a Choice object's
+    image is updated or cleared.
+    """
+    if not instance.pk:
+        return False
+
+    try:
+        old_instance = Choice.objects.get(pk=instance.pk)
+    except Choice.DoesNotExist:
+        return False
+
+    # Check if the image has changed
+    if old_instance.image and old_instance.image != instance.image:
+        old_instance.image.delete(save=False)
 
 
 @receiver(pre_delete, sender=Choice)
