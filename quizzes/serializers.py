@@ -262,7 +262,15 @@ class QuizCreateSerializer(serializers.ModelSerializer):
         centers_data = validated_data.pop('quizcenter_set')
         settings_data = validated_data.pop('settings')
         questions_data = validated_data.pop('questions')
-        teacher = self.context['request'].user.teacher_profile
+
+        user = self.context['request'].user
+        if user.role == 'teacher':
+            teacher = user.teacher_profile
+        elif user.role == 'assistant':
+            teacher = user.assistant_profile.teacher
+        else:
+            # This case should not be reached due to view permissions, but it's good practice.
+            raise serializers.ValidationError("User must be a teacher or assistant to create a quiz.")
 
         with transaction.atomic():
             quiz = Quiz.objects.create(teacher=teacher, **validated_data)
